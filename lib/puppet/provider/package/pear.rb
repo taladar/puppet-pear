@@ -1,6 +1,4 @@
-# Puppet PHP PEAR Package support
-# Taken from https://raw.github.com/gist/1524864/fdd8fd047aa702587c0b7cce7a77d55dbd781f01/pear.rb
-
+# Puppet PHP PEAR Package support (reference: https://raw.github.com/gist/1524864/fdd8fd047aa702587c0b7cce7a77d55dbd781f01/pear.rb)
 require 'puppet/provider/package'
 
 # PHP PEAR support.
@@ -68,7 +66,7 @@ Puppet::Type.type(:package).provide :pear, :parent => Puppet::Provider::Package 
     when /^PACKAGE/ then return nil
     when /^$/ then return nil
     when /^\(no packages installed\)$/ then return nil
-    when /^(\S+)\s+([.\da-zA-Z]+)\s+\S+$/
+    when /^(\S+)\s+([.\da-zA-Z0-9]+)\s+\S+$/i
       name = $1
       version = $2
       return {
@@ -163,6 +161,9 @@ Puppet::Type.type(:package).provide :pear, :parent => Puppet::Provider::Package 
       if match and (package.nil? or package.empty?) and (! @resource.should(:ensure).is_a? Symbol) and useversion
         source = source + "/#{@resource[:name]}-#{@resource.should(:ensure)}"
       end
+
+      # Update channel (avoid warnings "channel X has updated its protocols")
+      execute([command(:pearcmd), "channel-update", channel])
 
       command << channel + '/' + package
 
